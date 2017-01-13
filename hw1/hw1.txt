@@ -1,0 +1,73 @@
+Megh Vakharia, meghv
+
+The following requests were made via a netcat connection to http-by-hand.r7.io:80.
+
+-----------------------------------------------
+GET / HTTP/1.1
+host: http-by-hand.r7.io
+===============================================
+HTTP/1.1 200 OK
+Server: nginx/1.1.19
+Date: Mon, 04 Apr 2016 21:13:56 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 133
+Connection: keep-alive
+
+<h3>Home Page</h3>
+<marquee><p>welcome to the home page<p></marquee>
+<p>to log in go to the <a href="/login.html">login page</a></p>
+
+-----------------------------------------------
+GET /login.html HTTP/1.1
+host: http-by-hand.r7.io
+===============================================
+HTTP/1.1 200 OK
+Server: nginx/1.1.19
+Date: Mon, 04 Apr 2016 21:14:45 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 214
+Connection: keep-alive
+
+<h3>Login Form</h3>
+<form action="login.html" method="post">
+First name:<br>
+<input type="text" name="firstname"><br>
+Last name:<br>
+<input type="text" name="lastname"><br><br>
+<input type="submit" value="Submit">
+
+-----------------------------------------------
+POST /login.html HTTP/1.1
+host: http-by-hand.r7.io
+Content-Type: application/json
+{"firstname":"megh", "lastname":vakharia"}
+===============================================
+HTTP/1.1 400 BAD REQUEST
+Server: nginx/1.1.19
+Date: Mon, 04 Apr 2016 21:16:03 GMT
+Content-Type: text/html
+Content-Length: 192
+Connection: keep-alive
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>The browser (or proxy) sent a request that this server could not understand.</p>
+
+----------------------------------------------------------
+GET /login.html?firstname=megh&lastname=vakharia HTTP/1.1
+host: http-by-hand.r7.io
+==========================================================
+HTTP/1.1 200 OK
+Server: nginx/1.1.19
+Date: Mon, 04 Apr 2016 21:17:32 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 117
+Connection: keep-alive
+
+well done! isn't easier when a browser does it? flag:0e22d6499715ef61dd8b367dcb3460e9 - can you submit a post request
+
+
+For some reason, I was not able to successfully make a POST request to /login.html as the page kept returning a 400 Bad Request error. Using a GET request, however, I was able to retrieve the following flag:
+
+flag:0e22d6499715ef61dd8b367dcb3460e9

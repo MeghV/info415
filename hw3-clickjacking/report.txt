@@ -1,0 +1,29 @@
+Megh Vakharia
+Clickjacking HW
+
+Description
+==========================================================
+Clickjacking is the practice of using concealed content or
+concealed hyperlinks over legitimate content to lure a user
+into performing an attacker's desired action, unbeknowst
+to the end user. It is bad because it can cause the 
+end user to click on something that could negatively 
+affect them and they may have no indication that the 
+negative action has occured.
+
+Mitigations
+==========================================================
+There are a few ways to prevent clickjacking, particularly
+by targeting the malicious user's method of enabling
+clickjacking - disallowing the embedding of the site in
+an iFrame. One way is to set the "X-Frame-Options" header
+for responses coming from the site. X-Frame-Options can 
+ensure that any requests to host the site in a frame
+will be either denied, only allowed from specific sites,
+or only allowed from the same site. Alternatively, 
+JavaScript can be used to determine whether the site
+is currently in an iFrame and if so, perform an action. I would
+choose to use the X-Frame-Options header over the other 
+mitigation tactic as it is more powerful and robust in its
+defenses, vs. having to write frame busting code that continually
+works over time.
